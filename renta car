@@ -1,0 +1,103 @@
+Rent = Window(app, title = "Renta' Car", height = 400, width = 600, bg = 'white')# creates the rent window 
+box = Box(Rent, align = 'top', width = 'fill') # creates a box aligned to the top with a width that fills to the edge 
+text = Text(box, text = "Renta' Car", size = 15, align = 'top')# title of the page 
+text = Text(box, text = '----------------', align = 'top' )#text underlining the title 
+picture = Picture(box, image="car logo.JPG", align = 'right')# a JPG image used as a logo 
+boxb = Box(Rent, align = 'top', width = 'fill', border = 1 )# creates an outlined box to contain the postcode input
+text = Text(boxb, text = 'Please input your Post Code: ', size = 13, align = 'left') # text promping the user where to input their post code 
+boxa = Box(boxb, width = 100, height = 25, align = 'left')# a box to hold the post code textbox to make it appear a certain size
+Post_code = TextBox(boxa, width = 25, height = 'fill')# a text box for the user to input their post code in filling the box its contained in 
+blank = Text(Rent, text = ' ') #blank space 
+boxc = Box(Rent, align = 'top', width = 'fill', border = 1)# a bordered box to contain the start and end date 
+text = Text(boxc, text = 'Please input -     Start Date:(dd/mm)', align = 'left' ) # text indicating where to input the start date
+blank = Text(Rent, text = '   ', align = 'left') # blank space 
+Start_date = TextBox(boxc, align = 'left' )# text box to input the start date 
+blank = Text(Rent, text = '   ', align = 'left')# blank space 
+
+text = Text(boxc, text = 'End Date:(dd/mm)', align = 'left')# text indicating where to input the end date 
+End_date = TextBox(boxc, align = 'left' ) # text box for the user to enter the end date 
+
+listcars = ListBox(Rent, align = 'left', width = 'fill')# a list of the available cars for the user to choose 
+blank = Text(Rent, text = '         ', align = 'right')# blank space 
+boxd = Box(Rent, align = 'right')# a box that contains the back and save and pay buttons 
+back = PushButton(boxd, text = 'Back', align = 'bottom', command = hide_Rent)# back button to exit the rent window  
+save_pay = PushButton(boxd, text = 'Save and pay', align = 'bottom', command = Rent_Carval) # save and pay button used to enter the transaction window 
+bottomr = Box(Rent, width = 'fill', align = 'bottom') # box containing the dark and light modes 
+dark = PushButton(bottomr, align = 'left', text = 'Dark Mode', command = dark_mode) # dark mode button for when the user requires it 
+blank = Text(bottomr, align = 'left', text = '  ')# Blank space 
+light = PushButton(bottomr, align = 'left', text = 'Light Mode', command = light_mode)# light mode button for when the user requires it
+Rent.hide() # hides the window once its created 
+
+def Rent_Carval():
+	# the validation for the Rent window
+	if Post_code == '' or len(Post_code.value) != 6:# if the post code is left blank or it is anything other than 6 characters 
+		info('error','you must input a valid post code that consist of 6 characters ')#then this error message is displayed
+	elif Start_date == '' or '/' not in Start_date.value:#the start date must be input with a / 
+		info('error', 'you must enter a valid start date','it must contain /')#or this error message is displayed
+	elif End_date == '' or '/' not in End_date.value:#the end date must be input with a /
+		info('error','you must enter a valid end date ', 'it cannot be more than a month away')#or this error message is displayed
+	elif listcars.value == None:# the user must choos a car 
+		info('error', 'you must choose a car')# or this message will be displayed 
+	else:
+		Rent_Car()#call the Rent_Car function
+
+
+def LoadCars():# a funtion to call all the cars from my car table and display them in a listbox for people to choose from 
+	#query to select all cars from the database 
+	sqlselect = ("SELECT * FROM Car_Table")
+	print(sqlselect)
+	rows = query_database(database_file, sqlselect) # calls the query database 
+	for i in rows: # for loop to ad each item to a list 
+		if i[2] == 1:# if disability equals true 
+			accessa = "disability "# then call it disability 
+		else:
+			accessa = "non disability"# if not call it non disability so that its displayed as text not an integer
+		line = str(i[0]) + '  ' + i[1] + '  ' + accessa + '  ' + str(i[3]) # formating how the car option will be displayed
+		listcars.append(line) # splitting the string into a list for better access to each item 
+
+
+############
+#  PAY     #
+############
+def Pay_Car():
+	#GLOBAL VARIABLES 
+	global ID
+	global cost
+	if Bank_Number.value == '' or len(Bank_Number.value) != 16:# the bank number must be input and must be 16 characters 
+		info('error', 'you must input your 16 digit bank number located on the front of your credit/debit card')#or this error message will be displayed 
+	elif CVC_Number.value == '' or len(CVC_Number.value) != 3:# the CVC must be input and must be 3 characters 
+		info('error','you must enter your 3 digit CVC number located on the back of your credit/debit card')# or this error message will displayed 
+	elif Expiration_date.value == '' or '/' not in Expiration_date.value:# the expiration date must be input and must contain a /
+		info('error', 'you must input your cards expiration date')# or this error message will be displayed 
+	else:
+		# Query to insert a booking into my booking table
+		mysql2 = ("INSERT INTO Booking_Table(BookingStart, BookingEnd, BookingPostCode, BookingCost, CustomerID, CarID) VALUES ('" + str(Start_date.value) + "','" + str(End_date.value) + "','" + str(Post_code.value) + "','" + str(cost) + "','" + str(user_LoggedIn)+ "','" + str(ID)+ "')")
+		execute_sql(database_file, mysql2) # calls the funtion to execute the query
+		info('success', 'saved')# message telling the user it was a success
+    
+    #################################
+#      TRANSACTION (PAY)        #
+#################################
+Pay = Window(app, title = 'Pay', height = 400, width = 500)# creates the pay window 
+text = Text(Pay, text = 'Accept & Pay', size = 15, align = 'top')# Title of the page 
+text = Text(Pay, text = '------------') # text underlining the title
+text = Text(Pay, text = '    ') # blank space 
+boxe = Box(Pay, align = 'top', width = 'fill')# box containg the bank number input
+text= Text(boxe, align = 'left', text = 'Bank Number:', size = 12)# text prompting the user to input their bank number 
+Bank_Number = TextBox(boxe, align = 'left', width = 50)# the textbox for the user to input their bank number into
+blank = Text(Pay, text = '        ')# blank space 
+boxf = Box(Pay, align = 'top', width = 'fill')# box to contain the CVC number 
+text= Text(boxf, align = 'left', text = 'CVC:               ', size = 12) # text indicating where the CVC number needs to be input 
+CVC_Number = TextBox(boxf, align = 'left', width = 10)# text box for the CVC number to be input into
+blank = Text(Pay, text = '        ')#blank space 
+boxg = Box(Pay, align = 'top', width = 'fill')# box to contain the expiry date 
+text= Text(boxg, align = 'left', text = 'Expiry Date:    ', size = 12)# text indicating where to input the expiry date 
+Expiration_date = TextBox(boxg, align = 'left', width = 15)# textbox to input the expiry date into 
+fin = PushButton(Pay, text = 'Accept and Pay', command = Pay_Car)# button that concludes the process of the program and inserts the users booking into the database
+blank = Text(Pay, text = '  ')# blank space
+back = PushButton(Pay, text = 'Back', command= hide_Pay)#  back button for the user to exit the transaction window 
+bottomf = Box(Pay, width = 'fill', align = 'bottom')# box to contain the light and dark mode butons 
+dark = PushButton(bottomf, align = 'left', text = 'Dark Mode', command = dark_mode)# the dark mode button for when the user needs it 
+blank = Text(bottomf, align = 'left', text = '  ')# blank space 
+light = PushButton(bottomf, align = 'left', text = 'Light Mode', command = light_mode)# the light mode button for when the user needs it
+Pay.hide() # hides the pay window 
